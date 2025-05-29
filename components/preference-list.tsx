@@ -59,6 +59,7 @@ export function PreferenceList({ preferences, onClearPreferences, onPreferencesU
                 <TableHead>Worker</TableHead>
                 <TableHead>Task Preferences</TableHead>
                 <TableHead>Area Preferences (PESU)</TableHead>
+                <TableHead>PYYHINTÄ Preferences</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -98,6 +99,26 @@ export function PreferenceList({ preferences, onClearPreferences, onPreferencesU
                       )
                     ) : (
                       <span className="text-gray-400 text-sm">No area preference</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {pref.pyyhintaPreferences && pref.pyyhintaPreferences.length > 0 ? (
+                      expanded.has(pref.workerName) ? (
+                        <ol className="list-decimal pl-5">
+                          {pref.pyyhintaPreferences.map((pyyhinta, index) => (
+                            <li key={index} className="text-green-600 font-medium">
+                              {pyyhinta}
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <span className="text-green-600 font-medium">
+                          {pref.pyyhintaPreferences.slice(0, 2).join(", ")}
+                          {pref.pyyhintaPreferences.length > 2 ? "..." : ""}
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-gray-400 text-sm">No PYYHINTÄ preference</span>
                     )}
                   </TableCell>
                   <TableCell>

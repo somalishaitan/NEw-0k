@@ -201,8 +201,15 @@ export function AreaTemplate({
   ) => {
     const cellKey = `${pageIndex}-${rowIndex}-${column}`
     const customColor = cellColors[cellKey]
+    const isCutCell = cutCell?.cellKey === cellKey
 
     let backgroundColor = ""
+    let opacity = 1
+    
+    if (isCutCell) {
+      opacity = 0.5 // Make cut cells appear dimmed
+    }
+    
     if (isSectionHeader) {
       backgroundColor = "#f3f4f6" // gray-100
     } else if (isDuplicate) {
@@ -219,6 +226,7 @@ export function AreaTemplate({
 
     return {
       backgroundColor,
+      opacity,
       border: isActive ? "2px solid #3b82f6" : "1px solid transparent",
       borderRadius: isActive ? "4px" : "0px",
     }
@@ -254,13 +262,47 @@ export function AreaTemplate({
     setLocalClipboard(globalClipboard.getContent())
 
     // Subscribe to clipboard changes from other components
-    const unsubscribe = globalClipboard.subscribe((content: string) => {
+    const unsubscribeClipboard = globalClipboard.subscribe((content: string) => {
       setLocalClipboard(content)
       console.log(`📋 ${areaId}: Received clipboard update:`, content)
     })
 
-    return unsubscribe
-  }, [areaId])
+    // Subscribe to cut events to clear cut cells across components
+    const unsubscribeCut = globalClipboard.subscribeToCut((cutCell) => {
+      if (!cutCell) {
+        // Cut cell was cleared, update our local state
+        setCutCell(null)
+      } else if (cutCell.action === 'cut') {
+        // This is a cut operation, just mark the cell visually if it's ours
+        if (cutCell.areaId === areaId) {
+          setCutCell({ cellKey: cutCell.cellKey, value: cutCell.value })
+        }
+      } else if (cutCell.action === 'clear' && cutCell.areaId === areaId) {
+        // This is our cut cell, clear it when paste happens elsewhere
+        setCellValues((prev) => ({ ...prev, [cutCell.cellKey]: "" }))
+        
+        // If the cut cell was a worker column, trigger the callback
+        const [pageIndex, rowIndex, column] = cutCell.cellKey.split("-")
+        if (column === "worker" || column === "worker2") {
+          const actualRowIndex = Number.parseInt(pageIndex) * ROWS_PER_PAGE + Number.parseInt(rowIndex)
+          onAssignmentChange?.(areaId, actualRowIndex, "")
+        }
+        
+        // Record the clearing action in undo manager
+        globalUndoManager.recordAction(areaId, cutCell.cellKey, cutCell.value, "")
+        
+        // Clear our local cut state
+        setCutCell(null)
+        
+        console.log(`✂️ ${areaId}: Cleared cut cell ${cutCell.cellKey}`)
+      }
+    })
+
+    return () => {
+      unsubscribeClipboard()
+      unsubscribeCut()
+    }
+  }, [areaId, onAssignmentChange])
 
   // Subscribe to global undo actions
   useEffect(() => {
@@ -464,13 +506,13 @@ export function AreaTemplate({
           globalClipboard.copy(value)
           console.log(`📋 ${areaId}: Copied to global clipboard:`, value)
         } else if (e.ctrlKey && e.key === "x") {
-          // Cut functionality - copy to clipboard but don't clear until paste
+          // Cut functionality - copy to clipboard and mark for clearing on paste
           e.preventDefault()
           const value = cellValues[cellKey] || ""
 
           if (value) {
-            // Update global clipboard
-            globalClipboard.copy(value)
+            // Update global clipboard with cut operation
+            globalClipboard.cut(value, cellKey, areaId)
             console.log(`✂️ ${areaId}: Cut to global clipboard:`, value)
 
             // Mark this cell as cut (for visual feedback) but don't clear content yet
@@ -479,7 +521,7 @@ export function AreaTemplate({
         } else if (e.ctrlKey && e.key === "v") {
           e.preventDefault()
 
-          // Get content from global clipboard
+          // Get content from global clipboard - this will also clear the cut cell
           const clipboardContent = globalClipboard.paste()
 
           if (clipboardContent !== "") {
@@ -494,26 +536,6 @@ export function AreaTemplate({
             if (activeCell.column === "worker" || activeCell.column === "worker2") {
               const actualRowIndex = activeCell.pageIndex * ROWS_PER_PAGE + activeCell.rowIndex
               onAssignmentChange?.(areaId, actualRowIndex, clipboardContent)
-            }
-
-            // If there was a cut cell, now clear it and record the action
-            if (cutCell) {
-              const cutCellPreviousValue = cutCell.value
-
-              // Record the cut cell clearing action
-              globalUndoManager.recordAction(areaId, cutCell.cellKey, cutCellPreviousValue, "")
-
-              // Clear the cut cell content
-              setCellValues((prev) => ({ ...prev, [cutCell.cellKey]: "" }))
-
-              // If the cut cell was a worker column, trigger the callback
-              const [cutPageIndex, cutRowIndex, cutColumn] = cutCell.cellKey.split("-")
-              if (cutColumn === "worker" || cutColumn === "worker2") {
-                const cutActualRowIndex = Number.parseInt(cutPageIndex) * ROWS_PER_PAGE + Number.parseInt(cutRowIndex)
-                onAssignmentChange?.(areaId, cutActualRowIndex, "")
-              }
-
-              setCutCell(null)
             }
 
             console.log(`📋 ${areaId}: Pasted from global clipboard:`, clipboardContent)

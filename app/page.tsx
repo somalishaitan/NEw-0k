@@ -19,7 +19,7 @@ import { AreaForm } from "@/components/area-form"
 import { AreaTemplate } from "@/components/area-template"
 import { PreferenceList } from "@/components/preference-list"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { globalClipboard } from "../lib/global-clipboard"
+// Global clipboard is handled within area components
 
 // Minimalistic SwiftUI-style Security Screen
 function SecurityScreen({ onAuthenticated }: { onAuthenticated: () => void }) {
@@ -273,39 +273,8 @@ export default function App() {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "x") {
-        e.preventDefault();
-
-        const selectedContent = getSelectedCellContent(); // Function to get the selected cell's content
-        const selectedCellRef = getSelectedCellRef(); // Function to get a reference to the selected cell
-
-        if (selectedContent && selectedCellRef) {
-          const cellId = selectedCellRef.getAttribute("data-cell-id"); // Assume each cell has a unique `data-cell-id`
-          if (cellId) {
-            globalClipboard.cut(selectedContent, cellId, () => {
-              selectedCellRef.textContent = ""; // Clear the content of the current cell
-            });
-          } else {
-            console.warn("No cell ID found for cutting.");
-          }
-        } else {
-          console.warn("No content selected for cutting.");
-        }
-      }
-
-      if (e.ctrlKey && e.key === "v") {
-        e.preventDefault();
-
-        const clipboardContent = globalClipboard.paste();
-        const selectedCellRef = getSelectedCellRef(); // Function to get a reference to the selected cell
-
-        if (clipboardContent && selectedCellRef) {
-          selectedCellRef.textContent = clipboardContent; // Paste content into the selected cell
-          globalClipboard.clearSourceCell(); // Clear the source cell after pasting
-        } else {
-          console.warn("No content available for pasting or no cell selected.");
-        }
-      }
+      // Note: Ctrl+X and Ctrl+V are now handled individually by each area-template component
+      // This global handler is kept for other potential global shortcuts
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload)
@@ -315,7 +284,7 @@ export default function App() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload)
       window.removeEventListener("visibilitychange", handleVisibilityChange)
-      document.removeEventListener("keydown", handleKeyDown)
+      window.removeEventListener("keydown", handleKeyDown)
     }
   }, [])
 
@@ -558,18 +527,23 @@ function WorkerAssignmentPage() {
             }
           }
 
-          if (areaPreferences.length > 0) {
-            console.log(
-              `✅ Row ${index + 1}: ${workerName} → Tasks: [${taskPreferences.join(", ")}] → Areas: [${areaPreferences.join(", ")}]`,
-            )
-          } else {
-            console.log(
-              `✅ Row ${index + 1}: ${workerName} → Tasks: [${taskPreferences.join(", ")}] → No area preferences`,
-            )
-          }
+          // Process pyyhinta preferences (column 4)
+          let pyyhintaPreferences: string[] = []
+          if (row[3] && typeof row[3] === "string" && row[3].trim() !== "") {
+            if (row[3].includes(",")) {
+              // Split the comma-separated pyyhinta preferences
+              pyyhintaPreferences = row[3]
+                .split(",")
+                .map((pref) => pref.trim())
+                .filter((pref) => pref.length > 0)
+              } else {
+                // Single pyyhinta preference
+                pyyhintaPreferences = [row[3].trim()]
+              }
+            }
 
-          workerPreferences.push({ workerName, taskPreferences, areaPreferences })
-        })
+            workerPreferences.push({ workerName, taskPreferences, areaPreferences, pyyhintaPreferences })
+          })
 
         console.log(`📋 Processed ${workerPreferences.length} worker preference records`)
 
@@ -801,8 +775,7 @@ function WorkerAssignmentPage() {
               cabins,
               beds: beds !== undefined ? beds : area.beds,
               suites: suites !== undefined ? suites : area.suites,
-              full: full !== undefined ? full : area.full,
-              additionalWorkers: additionalWorkers !== undefined ? additionalWorkers : area.additionalWorkers,
+              full: full !== undefined ? full : area.full,              additionalWorkers: additionalWorkers !== undefined ? additionalWorkers : area.additionalWorkers,
             }
           : area,
       ),
@@ -1423,17 +1396,22 @@ function WorkerAssignmentPage() {
               }
             }
 
-            if (areaPreferences.length > 0) {
-              console.log(
-                `✅ Row ${index + 1}: ${workerName} → Tasks: [${taskPreferences.join(", ")}] → Areas: [${areaPreferences.join(", ")}]`,
-              )
-            } else {
-              console.log(
-                `✅ Row ${index + 1}: ${workerName} → Tasks: [${taskPreferences.join(", ")}] → No area preferences`,
-              )
+            // Process pyyhinta preferences (column 4)
+            let pyyhintaPreferences: string[] = []
+            if (row[3] && typeof row[3] === "string" && row[3].trim() !== "") {
+              if (row[3].includes(",")) {
+                // Split the comma-separated pyyhinta preferences
+                pyyhintaPreferences = row[3]
+                  .split(",")
+                  .map((pref) => pref.trim())
+                  .filter((pref) => pref.length > 0)
+              } else {
+                // Single pyyhinta preference
+                pyyhintaPreferences = [row[3].trim()]
+              }
             }
 
-            workerPreferences.push({ workerName, taskPreferences, areaPreferences })
+            workerPreferences.push({ workerName, taskPreferences, areaPreferences, pyyhintaPreferences })
           })
 
           console.log(`📋 Processed ${workerPreferences.length} worker preference records`)
@@ -1568,10 +1546,8 @@ function WorkerAssignmentPage() {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Upload an Excel file with worker names in the first column, comma-separated task preferences in the
-                    second column, and area preferences for PESU in the third column (Deck 5, 6 Back, 7 Back, 8 Back, 6
-                    Front, 7 Front, 8 Front)
-                  </p>
+                      Upload an Excel file with worker names in the first column, comma-separated task preferences in the
+                      second column, area preferences for PESU in the third column, and PYYHINTÄ preferences in the fourth column.</p>
                 </div>
 
                 {preferenceError && (

@@ -19,6 +19,7 @@ export interface WorkerPreference {
   workerName: string
   taskPreferences: string[] // Tasks in order of preference (first is most preferred)
   areaPreferences?: string[] // Areas in order of preference for PESU tasks (optional)
+  pyyhintaPreferences?: string[] // PYYHINTÄ task preferences in order (optional)
 }
 
 export interface SpecialAreaOptions {

@@ -81,6 +81,14 @@ class GlobalUndoManager {
     return true
   }
 
+  public canUndo(): boolean {
+    return this.undoStack.length > 0
+  }
+
+  public getLastAction(): UndoAction | null {
+    return this.undoStack.length > 0 ? this.undoStack[this.undoStack.length - 1] : null
+  }
+
   public subscribe(listener: (action: UndoAction) => void): () => void {
     this.listeners.add(listener)
     // Return unsubscribe function

@@ -524,14 +524,15 @@ export function calculateAssignments(
     assignments[task.areaId][task.taskKey] = ""
   })
 
-  // ENHANCED ASSIGNMENT: Handle PESU tasks with area preferences first
+  // ENHANCED ASSIGNMENT: Handle PESU and PYYHINTÄ tasks with area preferences first
   let assignmentCount = 0
 
-  console.log("\n🎯 ENHANCED ASSIGNMENT: PESU tasks with area preferences first")
+  console.log("\n🎯 ENHANCED ASSIGNMENT: PESU and PYYHINTÄ tasks with area preferences first")
 
-  // Separate PESU and non-PESU tasks
+  // Separate PESU, PYYHINTÄ and other tasks
   const pesuTasks = allTasks.filter((task) => task.baseTaskType === "PESU")
-  const nonPesuTasks = allTasks.filter((task) => task.baseTaskType !== "PESU")
+  const pyyhintaTasks = allTasks.filter((task) => task.baseTaskType.includes("PYYHINTÄ"))
+  const otherTasks = allTasks.filter((task) => task.baseTaskType !== "PESU" && !task.baseTaskType.includes("PYYHINTÄ"))
 
   // Sort PESU tasks by area preference priority
   const sortedPesuTasks = pesuTasks.sort((a, b) => {
@@ -596,13 +597,78 @@ export function calculateAssignments(
     assignments[task.areaId][task.taskKey] = assignedWorker
   })
 
-  // Now assign non-PESU tasks using existing logic
-  console.log("\n🔄 ASSIGNMENT: Non-PESU tasks with existing logic")
+  // Assign PYYHINTÄ tasks with area preferences
+  console.log("\n🎯 ENHANCED ASSIGNMENT: PYYHINTÄ tasks with area preferences")
 
-  nonPesuTasks.forEach((task) => {
+  // Sort PYYHINTÄ tasks by area preference priority
+  const sortedPyyhintaTasks = pyyhintaTasks.sort((a, b) => {
+    return a.areaId.localeCompare(b.areaId)
+  })
+
+  // Assign PYYHINTÄ tasks with area preferences
+  sortedPyyhintaTasks.forEach((task) => {
     let assignedWorker = ""
 
-    // First, try workers with preferences
+    // Get workers who prefer this area for PYYHINTÄ
+    const preferredWorkers = preferenceManager.getWorkersForAreaAndPyyhinta(task.areaId, task.baseTaskType)
+
+    for (const worker of preferredWorkers) {
+      if (assignedWorkers.has(worker)) continue // Skip if already assigned
+
+      // Check if this worker is in our uploaded worker list
+      if (workers.includes(worker)) {
+        assignedWorker = worker
+        assignedWorkers.add(worker)
+        assignmentCount++
+
+        console.log(`✅ PYYHINTÄ: "${task.taskName}" in ${task.areaId} → ${worker} (area preference match)`)
+        break
+      }
+    }
+
+    // If no area-preferred worker found, try general PYYHINTÄ workers
+    if (!assignedWorker) {
+      for (const worker of workersWithPreferences) {
+        if (assignedWorkers.has(worker)) continue
+
+        const workerData = workerPreferenceMap.get(worker)!
+        const wantsTask = doesWorkerWantTask(workerData.preferences, task.baseTaskType, preferenceManager)
+
+        if (wantsTask) {
+          assignedWorker = worker
+          assignedWorkers.add(worker)
+          assignmentCount++
+
+          console.log(`✅ PYYHINTÄ: "${task.taskName}" in ${task.areaId} → ${worker} (general PYYHINTÄ preference)`)
+          break
+        }
+      }
+    }
+
+    // If still no worker, try workers without preferences
+    if (!assignedWorker) {
+      for (const worker of workersWithoutPreferences) {
+        if (assignedWorkers.has(worker)) continue
+
+        assignedWorker = worker
+        assignedWorkers.add(worker)
+        assignmentCount++
+
+        console.log(`✅ PYYHINTÄ: "${task.taskName}" in ${task.areaId} → ${worker} (no preferences)`)
+        break
+      }
+    }
+
+    assignments[task.areaId][task.taskKey] = assignedWorker
+  })
+
+  // Now assign other tasks using existing logic - only use workers with preferences
+  console.log("\n🔄 ASSIGNMENT: Other tasks with workers who have preferences only")
+
+  otherTasks.forEach((task) => {
+    let assignedWorker = ""
+
+    // Only try workers with preferences - workers without preferences go to EXTRA
     for (const worker of workersWithPreferences) {
       if (assignedWorkers.has(worker)) continue
 
@@ -627,24 +693,10 @@ export function calculateAssignments(
       }
     }
 
-    // If no worker with preferences wants this task, assign a worker without preferences
-    if (!assignedWorker) {
-      for (const worker of workersWithoutPreferences) {
-        if (assignedWorkers.has(worker)) continue
-
-        assignedWorker = worker
-        assignedWorkers.add(worker)
-        assignmentCount++
-
-        console.log(`✅ "${task.taskName}" → ${worker} (no preferences)`)
-        break
-      }
-    }
-
     assignments[task.areaId][task.taskKey] = assignedWorker
   })
 
-  // Calculate final statistics (same as before)
+  // Calculate final statistics and put all unassigned workers (including those without preferences) in EXTRA
   const finalUnassignedWorkers = workers.filter((w) => !assignedWorkers.has(w))
   const unassignedTasks = allTasks.filter((task) => !assignments[task.areaId][task.taskKey])
 
@@ -654,22 +706,25 @@ export function calculateAssignments(
   console.log(`❌ Workers unassigned: ${finalUnassignedWorkers.length}`)
   console.log(`❌ Tasks unassigned: ${unassignedTasks.length}`)
 
-  // Create UNASSIGNED area if needed (same as before)
-  if (finalUnassignedWorkers.length > 0) {
-    const unassignedDetails: string[] = []
+  // Create UNASSIGNED area - all workers without preferences go here immediately
+  const unassignedDetails: string[] = []
 
-    finalUnassignedWorkers.forEach((worker) => {
-      const hasPrefs = workerPreferenceMap.has(worker)
-      if (hasPrefs) {
-        const workerData = workerPreferenceMap.get(worker)!
-        unassignedDetails.push(
-          `${worker} (HAS PREFERENCES: [${workerData.preferences.join(", ")}] - All tasks filled or no matching tasks)`,
-        )
-      } else {
-        unassignedDetails.push(`${worker} (NO PREFERENCES PROVIDED)`)
-      }
-    })
+  // Add workers with preferences who couldn't be assigned
+  workersWithPreferences.forEach((worker) => {
+    if (!assignedWorkers.has(worker)) {
+      const workerData = workerPreferenceMap.get(worker)!
+      unassignedDetails.push(
+        `${worker} (HAS PREFERENCES: [${workerData.preferences.join(", ")}] - All tasks filled or no matching tasks)`,
+      )
+    }
+  })
 
+  // Add all workers without preferences directly to EXTRA
+  workersWithoutPreferences.forEach((worker) => {
+    unassignedDetails.push(`${worker} (NO PREFERENCES PROVIDED)`)
+  })
+
+  if (unassignedDetails.length > 0) {
     assignments["UNASSIGNED"] = {
       __sections: ["UNASSIGNED WORKERS"],
       "UNASSIGNED WORKERS|workers": unassignedDetails.join(" | "),
@@ -742,3 +797,4 @@ export function calculateWorkersNeeded(areaConfigs: AreaConfig[], specialOptions
 
   return totalNeeded
 }
+// Removed global clipboard import as it's not used in assignment logic
