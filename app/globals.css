@@ -1,0 +1,520 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+
+    /* Dynamic scaling variables */
+    --base-font-size: 1rem;
+    --scale-factor: 1;
+    --container-max-width: 100vw;
+    --card-min-width: 25rem;
+    --card-max-width: 35rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+
+  /* Dynamic font scaling based on viewport */
+  html {
+    font-size: clamp(0.875rem, 0.8rem + 0.5vw, 1.125rem);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: var(--base-font-size);
+    line-height: 1.5;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Responsive horizontal scroll styling */
+  .horizontal-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar {
+    height: clamp(0.5rem, 0.4rem + 0.2vw, 0.75rem);
+  }
+
+  .horizontal-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 0.25rem;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+
+  /* Dynamic area cards that scale with zoom */
+  .area-card {
+    min-width: var(--card-min-width);
+    max-width: var(--card-max-width);
+    width: clamp(25rem, 30vw, 35rem);
+    min-height: fit-content;
+    max-height: 80vh;
+    flex-shrink: 0;
+  }
+
+  /* Responsive container that adapts to zoom */
+  .zoom-responsive-container {
+    width: 100%;
+    max-width: none;
+    padding-left: clamp(0.5rem, 2vw, 2rem);
+    padding-right: clamp(0.5rem, 2vw, 2rem);
+  }
+
+  /* Dynamic spacing that scales with viewport */
+  .dynamic-spacing {
+    gap: clamp(0.75rem, 1.5vw, 2rem);
+  }
+
+  /* Responsive text sizing */
+  .text-responsive-xs {
+    font-size: clamp(0.625rem, 0.6rem + 0.2vw, 0.75rem);
+  }
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+  }
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1rem);
+  }
+  .text-responsive-lg {
+    font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+  }
+  .text-responsive-xl {
+    font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  }
+}
+
+/* ASSIGNMENT TABLE - Responsive sizing */
+.assignment-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+}
+
+.assignment-table td,
+.assignment-table th {
+  height: clamp(2rem, 1.8rem + 0.5vw, 2.5rem) !important;
+  min-height: clamp(2rem, 1.8rem + 0.5vw, 2.5rem) !important;
+  max-height: clamp(2rem, 1.8rem + 0.5vw, 2.5rem) !important;
+  padding: clamp(0.25rem, 0.2rem + 0.2vw, 0.5rem) !important;
+  border: 1px solid #d1d5db !important;
+  vertical-align: middle !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem) !important;
+  line-height: 1.2 !important;
+}
+
+.assignment-table td:empty {
+  height: clamp(2rem, 1.8rem + 0.5vw, 2.5rem) !important;
+  min-height: clamp(2rem, 1.8rem + 0.5vw, 2.5rem) !important;
+}
+
+/* Responsive column widths */
+.assignment-table .col-worker {
+  width: 40% !important;
+}
+.assignment-table .col-task {
+  width: 30% !important;
+}
+.assignment-table .col-area {
+  width: 30% !important;
+}
+.assignment-table .col-signature {
+  width: 0% !important;
+}
+
+/* Responsive button and input sizing */
+.btn-responsive {
+  padding: clamp(0.375rem, 0.3rem + 0.2vw, 0.5rem) clamp(0.75rem, 0.6rem + 0.3vw, 1rem);
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+  border-radius: clamp(0.25rem, 0.2rem + 0.1vw, 0.375rem);
+}
+
+.input-responsive {
+  padding: clamp(0.375rem, 0.3rem + 0.2vw, 0.5rem) clamp(0.75rem, 0.6rem + 0.3vw, 1rem);
+  font-size: clamp(0.875rem, 0.8rem + 0.2vw, 1rem);
+  border-radius: clamp(0.25rem, 0.2rem + 0.1vw, 0.375rem);
+}
+
+/* Card responsive sizing */
+.card-responsive {
+  padding: clamp(1rem, 0.8rem + 0.5vw, 1.5rem);
+  border-radius: clamp(0.5rem, 0.4rem + 0.2vw, 0.75rem);
+}
+
+.card-header-responsive {
+  padding: clamp(1rem, 0.8rem + 0.5vw, 1.5rem) clamp(1rem, 0.8rem + 0.5vw, 1.5rem)
+    clamp(0.5rem, 0.4rem + 0.2vw, 0.75rem);
+}
+
+.card-content-responsive {
+  padding: clamp(1rem, 0.8rem + 0.5vw, 1.5rem);
+}
+
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:break-before-page {
+    break-before: page;
+  }
+
+  .print\:grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .print\:text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  .print\:text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .print\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .print\:p-1 {
+    padding: 0.25rem;
+  }
+  .print\:p-2 {
+    padding: 0.5rem;
+  }
+  .print\:px-1 {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  .print\:px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .print\:py-0\.5 {
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+  }
+  .print\:pb-1 {
+    padding-bottom: 0.25rem;
+  }
+  .print\:mb-1 {
+    margin-bottom: 0.25rem;
+  }
+  .print\:space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  @page {
+    margin: 0.25in; /* Reduced from 0.5in to 0.25in */
+    size: A4;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    font-size: 12px !important;
+    margin: 0 !important; /* Remove body margins */
+    padding: 0 !important; /* Remove body padding */
+  }
+
+  /* Minimize card margins and padding for print */
+  .print\:minimal-spacing .card-responsive {
+    margin: 0 !important;
+    padding: 0.25rem !important;
+  }
+
+  .print\:minimal-spacing .card-header-responsive {
+    padding: 0.25rem !important;
+    margin-bottom: 0.125rem !important;
+  }
+
+  .print\:minimal-spacing .card-content-responsive {
+    padding: 0.25rem !important;
+  }
+
+  .print\:table-layout-fixed {
+    table-layout: fixed;
+  }
+  .print\:w-1\/2 {
+    width: 50%;
+  }
+  .print\:w-1\/4 {
+    width: 25%;
+  }
+  .print\:border-t-4 {
+    border-top-width: 4px;
+  }
+  .print\:border-t-gray-400 {
+    border-top-color: #9ca3af;
+  }
+  .print\:pt-2 {
+    padding-top: 0.5rem;
+  }
+  .print\:space-y-1 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.25rem;
+  }
+
+  table.print\:border-separate {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .print\:col-worker {
+    width: 38% !important;
+  }
+  .print\:col-task {
+    width: 18% !important;
+  }
+  .print\:col-area {
+    width: 26% !important;
+  }
+  .print\:col-signature {
+    width: 18% !important;
+  }
+
+  /* Special column widths for D9/D10 areas */
+  .assignment-table.special-area .col-worker {
+    width: 35% !important;
+  }
+  .assignment-table.special-area .col-task {
+    width: 45% !important;
+  }
+  .assignment-table.special-area .col-area {
+    width: 8% !important;
+  }
+  .assignment-table.special-area .col-signature {
+    width: 12% !important;
+  }
+
+  .assignment-table.special-area.print\:table-standard .col-worker {
+    width: 35% !important;
+  }
+  .assignment-table.special-area.print\:table-standard .col-task {
+    width: 45% !important;
+  }
+  .assignment-table.special-area.print\:table-standard .col-area {
+    width: 8% !important;
+  }
+  .assignment-table.special-area.print\:table-standard .col-signature {
+    width: 12% !important;
+  }
+
+  .assignment-table.print\:table-standard td,
+  .assignment-table.print\:table-standard th {
+    height: 25px !important;
+    min-height: 25px !important;
+    max-height: 25px !important;
+    padding: 4px 6px !important;
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+  }
+
+  .assignment-table .col-signature {
+    width: 18% !important;
+  }
+  .assignment-table .col-worker {
+    width: 38% !important;
+  }
+  .assignment-table .col-task {
+    width: 18% !important;
+  }
+  .assignment-table .col-area {
+    width: 26% !important;
+  }
+
+  .print\:area-text {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+    padding: 0.25rem 0.125rem !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .print\:table-standard td {
+    padding: 0.25rem 0.125rem !important;
+    vertical-align: middle !important;
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+  }
+
+  .print\:table-standard th {
+    padding: 0.25rem 0.125rem !important;
+    vertical-align: middle !important;
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+    font-weight: 600 !important;
+  }
+
+  .print\:standard-header {
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .print\:standard-section {
+    margin-bottom: 0.75rem !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .print\:table-standard tr {
+    height: 25px !important;
+    min-height: 25px !important;
+  }
+
+  .print\:table-standard td,
+  .print\:table-standard th {
+    vertical-align: middle !important;
+  }
+
+  .horizontal-scroll {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .area-card {
+    max-height: none !important;
+    width: 100% !important;
+    min-width: auto !important;
+    max-width: none !important;
+  }
+}
+
+/* Zoom-specific responsive breakpoints */
+@media (max-width: 1200px) {
+  .area-card {
+    min-width: 20rem;
+    max-width: 30rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .area-card {
+    min-width: 18rem;
+    max-width: 25rem;
+  }
+
+  .zoom-responsive-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .area-card {
+    min-width: 16rem;
+    max-width: 20rem;
+  }
+}
+
+/* High zoom out scenarios */
+@media (min-width: 1920px) {
+  .area-card {
+    min-width: 30rem;
+    max-width: 40rem;
+  }
+}
+
+/* Hide browser's default password reveal button */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+}
+
+/* Hide Edge's password reveal button */
+input[type="password"]::-ms-reveal {
+  display: none;
+}
+
+/* Hide Chrome's password reveal button */
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none;
+}
